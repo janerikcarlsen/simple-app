@@ -1,0 +1,36 @@
+name: ci-aws
+
+on: 
+  push:
+    branches: 
+      - master
+      
+jobs:
+  deploy-aws:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push to ECR
+      working-directory: github-actions-python
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: com.godaddy.github-actions-poc
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+    - name: Deploy to EKS
+      id: deploy-eks
+      run: |
+        sed -i "s~{{ IMAGE_REF }}~${{ steps.build-image.outputs.image }}~g" kube/deployment.yaml
+        aws eks update-kubeconfig --name stockholm
+        kubectl -n test apply -f kube/
+        echo "Waiting for deployment to complete..."
+        ./kube/deploy/deployment_ready.sh -n test -d static -t 360
+        echo "Waiting for service endpoint in Test to be ready..."
+        ./kube/deploy/service_endpoint.sh test static

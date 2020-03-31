@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1 # for versions before 1.6.0 use extensions/v1beta1
+kind: Deployment
+metadata:
+  name: static
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: static
+      version: "1.0"
+  template:
+    metadata:
+      labels:
+        app: static
+        version: "1.0"
+    spec:
+      containers:
+      - name: static
+        image: 839438047672.dkr.ecr.eu-north-1.amazonaws.com/static:latest
+        ports:
+        - containerPort: 80
+            
