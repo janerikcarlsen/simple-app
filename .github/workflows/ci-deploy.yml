@@ -36,9 +36,13 @@ jobs:
         aws eks update-kubeconfig --name stockholm
         kubectl apply -f kubernetes/deployment.yaml
     - name: AWS Canary Monitoring
-      uses: janerikcarlsen/aws-canary-monitoring@master
+      uses: janerikcarlsen/aws-canary-monitoring@v1
       with:
         alarm-name: Synthetics-Alarm-my-canary-monitor
-        monitoring-time: 5
+        monitoring-time: 3
         polling-interval: 15
+    - name: Rollback
+      if: failure()
+      run: |
+        echo "Rolling back deployment"
 
