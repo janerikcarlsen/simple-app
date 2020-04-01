@@ -35,7 +35,7 @@ jobs:
         sed -i "s~<IMAGE>~${{ steps.build-img.outputs.image }}~g" kubernetes/deployment.yaml
         aws eks update-kubeconfig --name stockholm
         kubectl apply -f kubernetes/deployment.yaml
-    - name: AWS Canary Monitoring
+    - name: AWS Canary Monitoring   
       uses: janerikcarlsen/aws-canary-monitoring@v1
       with:
         alarm-name: Synthetics-Alarm-my-canary-monitor
